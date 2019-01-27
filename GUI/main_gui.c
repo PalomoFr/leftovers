@@ -27,6 +27,13 @@ static void on_open_image (GtkButton* button) {
 	img_edit_window(filename);
 }
 
+static void on_send_text (GtkButton* button, GtkWidget *textFields[2]) {
+	g_print("pressed");
+} 
+
+void exit_app(GtkWidget* window, gboolean *runtime) {
+	*runtime = FALSE;
+}
 
 int main (int argc, char *argv[]) {
 	GtkWidget *window;
@@ -93,12 +100,27 @@ int main (int argc, char *argv[]) {
 
 	gtk_container_add(GTK_CONTAINER(window), grid);
 
-	g_signal_connect(imgBtn, "clicked", G_CALLBACK (on_open_image), NULL);
+	GtkWidget *textFields[2];
+	textFields[0] = message;
+	textFields[1] = chat;
+	
 
-	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), G_OBJECT(window));
+	g_signal_connect(imgBtn, "clicked", G_CALLBACK (on_open_image), NULL);
+	g_signal_connect(sendBtn, "clicked", G_CALLBACK (on_send_text), textFields);
+
+	//g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), G_OBJECT(window));
+	gboolean runtime = TRUE;
+	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(exit_app), &runtime);
 
 	gtk_widget_show_all(window);
-	gtk_main();
+	
+	while (gtk_main_iteration_do(FALSE)) {
+		if (!runtime)
+			break;
+
+		//other callback handling
+
+	}
 
 	return EXIT_SUCCESS;
 }
