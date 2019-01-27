@@ -28,7 +28,21 @@ static void on_open_image (GtkButton* button) {
 }
 
 static void on_send_text (GtkButton* button, GtkWidget *textFields[2]) {
-	g_print("pressed");
+	GtkTextBuffer *messageBuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textFields[0]));
+	
+	GtkTextIter s, e;
+	gtk_text_buffer_get_bounds(messageBuf, &s, &e);
+	gchar *message = gtk_text_buffer_get_text(messageBuf, &s, &e, FALSE);
+	gtk_text_buffer_set_text(messageBuf, "", -1);
+
+	// | name this function however you want, #include the headerfile to your file in this file
+	// | it takes gchar * as an argument, edit it however you want, 
+	// V the result will then be shown in the main window (appended at the end)
+	//modify_message_function(message);
+
+	GtkTextBuffer *chatBuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textFields[1]));
+	gtk_text_buffer_get_end_iter(chatBuf, &e);
+	gtk_text_buffer_insert(chatBuf, &e, message, -1);
 } 
 
 void exit_app(GtkWidget* window, gboolean *runtime) {
@@ -113,12 +127,20 @@ int main (int argc, char *argv[]) {
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(exit_app), &runtime);
 
 	gtk_widget_show_all(window);
+
+	// use g_message to log out imporatnt events in the process, such as server connection...
+	g_message("GUI started");
 	
 	while (gtk_main_iteration_do(FALSE)) {
 		if (!runtime)
 			break;
 
 		//other callback handling
+
+		//this loop needs to be running infinitely, 
+		//if you need to wait in your program anywhere, 
+		//(and it cannot be done only once before the loop)
+		//we will need to make it into threads
 
 	}
 
