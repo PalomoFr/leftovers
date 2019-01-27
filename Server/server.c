@@ -10,6 +10,8 @@
 #include <time.h> 
 #include <fcntl.h>
 
+#include <mysql/mysql.h>
+
 struct vector{
 	int size;
 	struct client* data;
@@ -78,11 +80,11 @@ int main(int argc, char *argv[])
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
     fcntl(listenfd, F_SETFL, SOCK_NONBLOCK);
     memset(&serv_addr, '0', sizeof(serv_addr));
-     
+    int port = atoi(argv[1]);
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(5000); 
+    serv_addr.sin_port = htons(port); 
 
     bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
 
@@ -119,7 +121,7 @@ int main(int argc, char *argv[])
 			//fcntl(vect.data[vect.size - 1].connfd, F_SETFL, SOCK_NONBLOCK);
 			for(int i = 0; i < vect.size ; i++){
 				if(vect.data[i].connfd == connfd){
-					printf("---> YOU : connected\n");
+					printf("---> YOU (%s): connected\n", vect.data[i].username);
 				}else{
 					printf("---> %s : connected\n", vect.data[i].username);
 				}
@@ -138,6 +140,7 @@ int main(int argc, char *argv[])
 						if(buf[j] == '\0'){
 							break;
 						}
+						
 					}
 					vect.data[i].renamed = 1;
 					//printf("Username changed in %s \n", vect.data[i].username);
@@ -147,7 +150,7 @@ int main(int argc, char *argv[])
 					
 					char* lop = malloc(sizeof(char) * 1075);
 					snprintf(lop,1050, "[%s]: %s\n", vect.data[i].username, buf);
-					printf("%s\n", lop);
+					printf("%s", lop);
 					for(int k = 0; k < vect.size ; k++){
 						if(vect.data[k].connfd != vect.data[i].connfd){
 							int u = send(vect.data[k].connfd, lop, 1075, NULL);
