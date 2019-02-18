@@ -1,6 +1,8 @@
 #include <gtk/gtk.h>
 #include "img_edit_gui.h"
 
+GtkWidget *chat;
+
 static void on_open_image (GtkButton* button) {	
 	// set up a dialog
 	GtkWidget *toplevel = gtk_widget_get_toplevel (GTK_WIDGET (button));
@@ -43,6 +45,18 @@ static void on_send_text (GtkButton* button, GtkWidget *textFields[2]) {
 	GtkTextBuffer *chatBuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textFields[1]));
 	gtk_text_buffer_get_end_iter(chatBuf, &e);
 	gtk_text_buffer_insert(chatBuf, &e, message, -1);
+	gtk_text_buffer_insert(chatBuf, &e, "\n", 1);
+	// demo
+	//recieved_text("Hi, sir.");
+} 
+
+void recieved_text (gchar *m) {
+	GtkTextIter e;
+
+	GtkTextBuffer *chatBuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(chat));
+	gtk_text_buffer_get_end_iter(chatBuf, &e);
+	gtk_text_buffer_insert(chatBuf, &e, m, -1);
+	gtk_text_buffer_insert(chatBuf, &e, "\n", 1);
 } 
 
 void exit_app(GtkWidget* window, gboolean *runtime) {
@@ -56,7 +70,6 @@ int main (int argc, char *argv[]) {
 	GtkWidget *botBox;
 
 	GtkWidget *name;
-	GtkWidget *chat;
 	GtkWidget *message;
 	GtkWidget *sendBtn;
 	GtkWidget *imgBtn;
@@ -131,6 +144,9 @@ int main (int argc, char *argv[]) {
 	// use g_message to log out imporatnt events in the process, such as server connection...
 	g_message("GUI started");
 	
+	// demo
+	//recieved_text("HI :)");
+
 	while (gtk_main_iteration_do(FALSE)) {
 		if (!runtime)
 			break;
