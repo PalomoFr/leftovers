@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <time.h> 
 #include <fcntl.h>
+#include <dirent.h>
+#include <errno.h>
 
 #include <mysql/mysql.h>
 
@@ -68,13 +70,30 @@ void vector_print(struct vector* vect){
 	}
 }
 
-
+int direxist(char* usr){
+	DIR* dir = opendir(usr);
+	if (dir)
+	{
+		/* Directory exists. */
+		closedir(dir);
+	}
+	else if (ENOENT == errno)
+	{
+		/* Directory does not exist. */
+		mkdir(usr, 0700);
+	}
+	else
+	{
+		/* opendir() failed for some other reason. */
+		printf("Error Dir \n");
+	}
+}
 int main(int argc, char *argv[])
 {
 	
     int listenfd = 0, connfd = 0;
     struct sockaddr_in serv_addr; 
-
+	
     //int j = sprintf(sendBuff, "Test Message Server \n");ù
 	printf("Server Launched Port : %s \n", argv[1]);
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -138,6 +157,7 @@ int main(int argc, char *argv[])
 					for(int j = 0 ; j < 1024 ; j++){
 						vect.data[i].username[j] = buf[j];
 						if(buf[j] == '\0'){
+							direxist(vect.data[i].username);
 							break;
 						}
 						
@@ -147,20 +167,46 @@ int main(int argc, char *argv[])
 					memset(buf, '0', 1024);
 				}
 				else{
-					
-					char* lop = malloc(sizeof(char) * 1075);
-					snprintf(lop,1050, "[%s]: %s\n", vect.data[i].username, buf);
-					printf("%s", lop);
-					for(int k = 0; k < vect.size ; k++){
-						if(vect.data[k].connfd != vect.data[i].connfd){
-							int u = send(vect.data[k].connfd, lop, 1075, NULL);
+					if(buf[0] == '/' && buf[1] == '2'){
+						char connected[1024];
+						memset(connected, 0, 1024);
+						strcat(connected, "/2");
+						for(int j = 0 ; j < vect.size ; j++){
+							
+							strcat(connected,vect.data[j].username);
+							strcat(connected, "\n");
+						}
+						int u = send(vect.data[i].connfd, connected, 1024, NULL);
+						if(u < 0){
+							printf("Error\n");
+						}
+					}
+					if(buf[0] == '/' && buf[1] == '1'){
+						
+						printf("Message client reçus \n");
+						char* lop = malloc(sizeof(char) * 1075);
+						char tuf[1024];
+						memset(tuf, 0, 1024);
+						for(int i = 2 ; i < strlen(buf) ; i++){
+							tuf[i - 2] = buf[i];
+						}
+						snprintf(lop,1050, "[%s]:%s\n", vect.data[i].username, tuf);
+						printf("%s", lop);
+						for(int k = 0; k < vect.size ; k++){
+							memset(tuf, 0, 1024);
+							strcat(tuf, "/1");
+							strcat(tuf, lop);
+							int u = send(vect.data[k].connfd, tuf, 1024, NULL);
 							if(u < 0){
 								printf("Error\n");
 							}
+							
 						}
+						free(lop);
+						memset(buf, '0', 1024);
 					}
-					free(lop);
-					memset(buf, '0', 1024);
+					
+					
 				}
 				
 			}
