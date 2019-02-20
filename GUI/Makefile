@@ -5,15 +5,18 @@ APP=./main_gui
 
 ODIR=build
 
-DEPS = img_edit_gui.h
+DEPS = img_edit_gui.h ImageEditing/image_edit.h
 
-_OBJ = img_edit_gui.o main_gui.o 
+_OBJ = img_edit_gui.o main_gui.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
+
+$(ODIR)/image_edit.o: ImageEditing/image_edit.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(ODIR)/%.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-build: $(OBJ)
+build: $(OBJ) $(ODIR)/image_edit.o
 	$(CC) -o $(APP) $^ $(CFLAGS)
 
 run: $(OBJ) build
