@@ -1,7 +1,7 @@
-CC=gcc 
-CFLAGS=-Wall -Wextra -std=c99 -O0 -g `pkg-config --cflags gtk+-3.0 --libs gtk+-3.0` -I.
-
-APP=./main_gui
+CC = gcc 
+CFLAGS = `pkg-config --cflags gtk+-3.0` -Wall -Wextra -std=c99 -o main -g `pkg-config --libs gtk+-3.0`
+SRC = *.c -lm
+main_gui : ${SRC}
 
 ODIR=build
 

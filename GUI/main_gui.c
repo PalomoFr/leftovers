@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
+#include "client.h"
 #include "img_edit_gui.h"
-
+int sockfd = 0;
 GtkWidget *chat;
 gboolean connected;
 
@@ -41,7 +42,7 @@ static void on_open_image (GtkButton* button) {
 	gchar *filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 	gtk_widget_destroy(dialog);
 	
-	img_edit_window(filename);
+	//img_edit_window(filename);
 }
 
 static void on_send_text (GtkButton* button __attribute__((unused)), GtkWidget *textFields[2]) {
@@ -60,14 +61,13 @@ static void on_send_text (GtkButton* button __attribute__((unused)), GtkWidget *
 	// | name this function however you want, #include the headerfile to your file in this file
 	// | it takes gchar * as an argument, edit it however you want, 
 	// V the result will then be shown in the main window (appended at the end)
-	//modify_message_function(message);
+	
+	sentence(message, &sockfd);
+	
 
-	GtkTextBuffer *chatBuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textFields[1]));
+	/*GtkTextBuffer *chatBuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textFields[1]));
 	gtk_text_buffer_get_end_iter(chatBuf, &e);
-	gtk_text_buffer_insert(chatBuf, &e, message, -1);
-	gtk_text_buffer_insert(chatBuf, &e, "\n", 1);
-	// demo
-	//recieved_text("Hi, sir.");
+	gtk_text_buffer_insert(chatBuf, &e, message, -1);*/
 } 
 
 static void on_connect(GtkButton* connectBtn, GtkWidget *name) {
@@ -88,7 +88,6 @@ static void on_connect(GtkButton* connectBtn, GtkWidget *name) {
 	                                      "_Cancel", GTK_RESPONSE_REJECT,
 	                                      NULL);
 	GtkWidget *content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
-
 	GtkWidget *grid;
 	grid = gtk_grid_new();
 	gtk_grid_set_column_spacing (GTK_GRID(grid), 5);
@@ -154,6 +153,69 @@ static void on_connect(GtkButton* connectBtn, GtkWidget *name) {
 	connected = TRUE;
 
 	gtk_widget_destroy (dialog);
+}  
+  
+int MSG(){
+	char rec[1024];
+	int y;
+	char msg[1024];
+	char usr[30];
+	char endbuf[1024];
+	int u = 0;
+	memset(rec, 0, 1024);
+	memset(msg, 0, 1024);
+	memset(endbuf, 0, 1024);
+	memset(usr, 0, 30);
+	y = recv(sockfd, rec, 1024, 0);
+	if(y <= 0){
+		return -1;
+	}
+	printf("Brute -- %s\n", rec);
+	if(rec[1] == '1'){
+		int w = 0;
+		for(int i = 2 ; rec[i] != 0; i++){
+			if(rec[i] == ':'){
+				w = i;
+				i++;
+			}
+			if(w == 0){
+				usr[i - 2] = rec[i];
+			}
+			else{
+				msg[i - w - 1] = rec[i]; 
+			}
+		}
+		decrypt(msg, 1);
+		printf("<%s>%s\n", usr, msg);
+		strcat(endbuf, usr);
+		strcat(endbuf, ":");
+		strcat(endbuf, msg);
+		
+		GtkTextIter e;
+
+		GtkTextBuffer *chatBuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(chat));
+		gtk_text_buffer_get_end_iter(chatBuf, &e);
+		gtk_text_buffer_insert(chatBuf, &e, endbuf, -1);
+		gtk_text_buffer_insert(chatBuf, &e, "\n", 1);
+	}
+	if(rec[1] == '2'){
+		GtkTextIter e;
+
+		GtkTextBuffer *chatBuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(chat));
+		gtk_text_buffer_get_end_iter(chatBuf, &e);
+		gtk_text_buffer_insert(chatBuf, &e, "List of Connected people:", -1);
+		gtk_text_buffer_insert(chatBuf, &e, "\n", 1);
+		for(int i = 2 ; i < strlen(rec) ; i++){
+			endbuf[i - 2] = rec[i];
+		}
+		printf("List of People on the Server \n %s", endbuf);
+		gtk_text_buffer_get_end_iter(chatBuf, &e);
+		gtk_text_buffer_insert(chatBuf, &e, endbuf, -1);
+		gtk_text_buffer_insert(chatBuf, &e, "\n", 1);
+		gtk_text_buffer_get_end_iter(chatBuf, &e);
+		gtk_text_buffer_insert(chatBuf, &e, "------------------------------------------", -1);
+		gtk_text_buffer_insert(chatBuf, &e, "\n", 1);
+	}
 }
 
 void exit_app(GtkWidget* window __attribute__((unused)), gboolean *runtime) {
@@ -169,6 +231,7 @@ int main (int argc, char *argv[]) {
 	GtkWidget *header;
 
 	GtkWidget *name;
+	
 	GtkWidget *message;
 	GtkWidget *sendBtn;
 	GtkWidget *connectBtn;
@@ -255,13 +318,10 @@ int main (int argc, char *argv[]) {
 
 	on_connect(GTK_BUTTON(connectBtn), name);
 	
-	// demo
-	//recieved_text("HI :)");
-
 	while (gtk_main_iteration_do(FALSE)) {
 		if (!runtime)
 			break;
-
+		MSG();
 		//other callback handling
 
 		//this loop needs to be running infinitely, 
