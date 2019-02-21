@@ -1,6 +1,9 @@
 #include <gtk/gtk.h>
 #include "client.h"
 #include "img_edit_gui.h"
+#include "encryption.h"
+#include "client.h"
+
 int sockfd = 0;
 GtkWidget *chat;
 gboolean connected;
@@ -42,7 +45,7 @@ static void on_open_image (GtkButton* button) {
 	gchar *filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 	gtk_widget_destroy(dialog);
 	
-	//img_edit_window(filename);
+	img_edit_window(filename);
 }
 
 static void on_send_text (GtkButton* button __attribute__((unused)), GtkWidget *textFields[2]) {
