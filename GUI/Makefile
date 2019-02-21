@@ -1,23 +1,26 @@
 CC = gcc 
 CFLAGS = `pkg-config --cflags gtk+-3.0` -Wall -Wextra -std=c99 -o main -g `pkg-config --libs gtk+-3.0`
-SRC = *.c -lm
-main_gui : ${SRC}
+
+APP=./main
 
 ODIR=build
 
-DEPS = img_edit_gui.h ImageEditing/image_edit.h
+DEPS = img_edit_gui.h encryption.h client.h ImageEditing/image_edit.h
 
-_OBJ = img_edit_gui.o main_gui.o
+_OBJ = img_edit_gui.o encryption.o client.o main_gui.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
-$(ODIR)/image_edit.o: ImageEditing/image_edit.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
-
-$(ODIR)/%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+#main_gui : $(OBJ) build/image_edit.o build
+#	echo done
 
 build: $(OBJ) $(ODIR)/image_edit.o
 	$(CC) -o $(APP) $^ $(CFLAGS)
+
+$(ODIR)/image_edit.o: ImageEditing/image_edit.c $(DEPS)
+	$(CC) -c $< $(CFLAGS) -o $@
+
+$(ODIR)/%.o: %.c $(DEPS)
+	$(CC) -c $< $(CFLAGS) -o $@ 
 
 run: $(OBJ) build
 	$(APP)
