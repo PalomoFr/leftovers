@@ -180,8 +180,12 @@ void img_edit_window(gchar *path) {
 	mainBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 
 	header = gtk_header_bar_new();
+	gchar *filename = strrchr(path, '/');
 	char name_text[256];
-	sprintf(name_text, "<big>%s</big>", path);
+	if (filename)
+		sprintf(name_text, "<big>%s</big>", filename+1);
+	else	
+		sprintf(name_text, "<big>%s</big>", path);
 	name = gtk_label_new(name_text);
 	gtk_label_set_use_markup(GTK_LABEL(name), TRUE);
 	gtk_header_bar_set_custom_title(GTK_HEADER_BAR(header), name);
