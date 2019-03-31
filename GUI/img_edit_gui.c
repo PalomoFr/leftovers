@@ -29,8 +29,17 @@ void on_delete(GtkWidget *window) {
 	gtk_widget_destroy(window);
 }
 
-void on_send(GtkButton *sendBtn) {
-	g_message("Image sent.");
+void on_send(GtkButton *sendBtn, const char *shared_folder) {
+	const char* filename = "image_test.jpg";
+
+	char* full_path = malloc(strlen(shared_folder)+strlen(filename));
+	strcpy(full_path, shared_folder); 
+	strcat(full_path, filename);
+
+	if (gdk_pixbuf_save (images->current, full_path, "jpeg", NULL, NULL))
+		g_message("Image saved.");
+	else 
+		g_warning("Image could not be saved.");
 	GtkWidget *toplevel = gtk_widget_get_toplevel (GTK_WIDGET (sendBtn));
 	gtk_widget_destroy(toplevel);
 }
@@ -143,7 +152,7 @@ void on_shade(GtkButton *button __attribute__((unused)), GtkWidget *settingsView
 	image_show(images);
 }
 
-void img_edit_window(gchar *path) {
+void img_edit_window(gchar *path, const char *shared_folder) {
 	GtkWidget *window;
 	GtkWidget *header;
 	GtkWidget *grid;
@@ -272,7 +281,7 @@ void img_edit_window(gchar *path) {
 
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(on_delete), G_OBJECT(window));
 	g_signal_connect(closeBtn, "clicked", G_CALLBACK(on_close), NULL);
-	g_signal_connect(sendBtn, "clicked", G_CALLBACK(on_send), NULL);
+	g_signal_connect(sendBtn, "clicked", G_CALLBACK(on_send), shared_folder);
 
 	g_signal_connect(applyBtn, "clicked", G_CALLBACK(on_apply), NULL);
 	g_signal_connect(removeBtn, "clicked", G_CALLBACK(on_remove), NULL);

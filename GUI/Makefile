@@ -5,9 +5,9 @@ APP=./main
 
 ODIR=build
 
-DEPS = img_edit_gui.h encryption.h client.h ImageEditing/image_edit.h
+DEPS = img_edit_gui.h encryption.h client.h ImageEditing/image_edit.h sharedBrowser/shared_browser.h
 
-_OBJ = img_edit_gui.o encryption.o client.o main_gui.o
+_OBJ = img_edit_gui.o encryption.o client.o main_gui.o shared_browser.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 #main_gui : $(OBJ) build/image_edit.o build
@@ -17,6 +17,9 @@ build: $(OBJ) $(ODIR)/image_edit.o
 	$(CC) -o $(APP) $^ $(CFLAGS)
 
 $(ODIR)/image_edit.o: ImageEditing/image_edit.c $(DEPS)
+	$(CC) -c $< $(CFLAGS) -o $@
+
+$(ODIR)/shared_browser.o: sharedBrowser/shared_browser.c $(DEPS)
 	$(CC) -c $< $(CFLAGS) -o $@
 
 $(ODIR)/%.o: %.c $(DEPS)

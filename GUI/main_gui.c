@@ -1,12 +1,14 @@
 #include <gtk/gtk.h>
 #include "client.h"
 #include "img_edit_gui.h"
+#include "sharedBrowser/shared_browser.h"
 #include "encryption.h"
 #include "client.h"
 
 int sockfd = 0;
 GtkWidget *chat;
 gboolean connected;
+const char* SHARED_FOLDER_PATH = "./shared_data/";
 
 void recieved_text (gchar *m) {
 	GtkTextIter e;
@@ -45,7 +47,11 @@ static void on_open_image (GtkButton* button) {
 	gchar *filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 	gtk_widget_destroy(dialog);
 	
-	img_edit_window(filename);
+	img_edit_window(filename, SHARED_FOLDER_PATH);
+}
+
+static void on_open_shared (GtkButton* button __attribute__((unused))) {	
+	shared_browser(SHARED_FOLDER_PATH);
 }
 
 static void on_send_text (GtkButton* button __attribute__((unused)), GtkWidget *textFields[2]) {
@@ -239,6 +245,7 @@ int main (int argc, char *argv[]) {
 	GtkWidget *sendBtn;
 	GtkWidget *connectBtn;
 	GtkWidget *imgBtn;
+	GtkWidget *sharedBtn;
 
 	connected = FALSE;
 
@@ -259,10 +266,13 @@ int main (int argc, char *argv[]) {
 
 	connectBtn = gtk_button_new_with_label("Connect");
 	gtk_widget_set_size_request(connectBtn, 70, 30);
+	sharedBtn = gtk_button_new_with_label("Shared files");
+	gtk_widget_set_size_request(sharedBtn, 70, 30);
 	imgBtn = gtk_button_new_with_label("Send an image");
 	gtk_widget_set_size_request(imgBtn, 70, 30);
-	gtk_header_bar_pack_start(GTK_HEADER_BAR(header), connectBtn);
 	gtk_header_bar_pack_end(GTK_HEADER_BAR(header), imgBtn);
+	gtk_header_bar_pack_start(GTK_HEADER_BAR(header), connectBtn);
+	gtk_header_bar_pack_end(GTK_HEADER_BAR(header), sharedBtn);
 
 	gtk_box_pack_start(GTK_BOX(mainBox), header, FALSE, FALSE, 0);
 
@@ -308,6 +318,7 @@ int main (int argc, char *argv[]) {
 	textFields[1] = chat;
 	
 	g_signal_connect(imgBtn, "clicked", G_CALLBACK (on_open_image), NULL);
+	g_signal_connect(sharedBtn, "clicked", G_CALLBACK (on_open_shared), NULL);
 	g_signal_connect(sendBtn, "clicked", G_CALLBACK (on_send_text), textFields);
 	g_signal_connect(connectBtn, "clicked", G_CALLBACK (on_connect), name);
 
