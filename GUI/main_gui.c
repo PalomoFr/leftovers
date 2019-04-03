@@ -8,7 +8,7 @@
 int sockfd = 0;
 GtkWidget *chat;
 gboolean connected;
-const char* SHARED_FOLDER_PATH = "./shared_data/";
+file_browser_t *browser;
 
 void recieved_text (gchar *m) {
 	GtkTextIter e;
@@ -47,11 +47,7 @@ static void on_open_image (GtkButton* button) {
 	gchar *filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 	gtk_widget_destroy(dialog);
 	
-	img_edit_window(filename, SHARED_FOLDER_PATH);
-}
-
-static void on_open_shared (GtkButton* button __attribute__((unused))) {	
-	shared_browser(SHARED_FOLDER_PATH);
+	img_edit_window(filename, browser);
 }
 
 static void on_send_text (GtkButton* button __attribute__((unused)), GtkWidget *textFields[2]) {
@@ -242,10 +238,10 @@ int main (int argc, char *argv[]) {
 	GtkWidget *name;
 	
 	GtkWidget *message;
+	GtkWidget *shared_column;
 	GtkWidget *sendBtn;
 	GtkWidget *connectBtn;
 	GtkWidget *imgBtn;
-	GtkWidget *sharedBtn;
 
 	connected = FALSE;
 
@@ -266,18 +262,15 @@ int main (int argc, char *argv[]) {
 
 	connectBtn = gtk_button_new_with_label("Connect");
 	gtk_widget_set_size_request(connectBtn, 70, 30);
-	sharedBtn = gtk_button_new_with_label("Shared files");
-	gtk_widget_set_size_request(sharedBtn, 70, 30);
 	imgBtn = gtk_button_new_with_label("Send an image");
 	gtk_widget_set_size_request(imgBtn, 70, 30);
 	gtk_header_bar_pack_end(GTK_HEADER_BAR(header), imgBtn);
 	gtk_header_bar_pack_start(GTK_HEADER_BAR(header), connectBtn);
-	gtk_header_bar_pack_end(GTK_HEADER_BAR(header), sharedBtn);
 
 	gtk_box_pack_start(GTK_BOX(mainBox), header, FALSE, FALSE, 0);
 
 	grid = gtk_grid_new();
-	gtk_grid_set_column_spacing (GTK_GRID(grid), 5);
+	gtk_grid_set_column_spacing (GTK_GRID(grid), 15);
 	gtk_grid_set_row_spacing(GTK_GRID(grid), 5);
 
 	gtk_container_set_border_width(GTK_CONTAINER(grid), 15);
@@ -291,7 +284,24 @@ int main (int argc, char *argv[]) {
 	gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(chat), FALSE);
 	gtk_widget_set_vexpand (chat, TRUE);
 	gtk_widget_set_hexpand (chat, TRUE);
-	gtk_grid_attach(GTK_GRID(grid), chat, 0, 0, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), chat, 0, 0, 1, 2);
+
+
+	GtkWidget *shared_label = gtk_label_new("<big>Shared Files:</big>");
+	gtk_label_set_use_markup(GTK_LABEL(shared_label), TRUE);
+	gtk_grid_attach(GTK_GRID(grid), shared_label, 1, 0, 1, 1);
+
+	browser = malloc(sizeof(file_browser_t));
+	browser->wrapper = gtk_scrolled_window_new(NULL,NULL);
+	gtk_container_set_border_width(GTK_CONTAINER(browser->wrapper), 5);
+	gtk_widget_set_size_request(browser->wrapper, 170, 500);
+	gtk_widget_set_vexpand (browser->wrapper, TRUE);
+
+	GtkWidget *w = shared_browser(browser);
+	gtk_widget_set_valign (w, GTK_ALIGN_START);
+
+	gtk_container_add(GTK_CONTAINER(browser->wrapper), w);
+	gtk_grid_attach(GTK_GRID(grid), browser->wrapper, 1, 1, 1, 1);
 
 
 	botBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 3);
@@ -304,7 +314,7 @@ int main (int argc, char *argv[]) {
 	gtk_box_pack_start(GTK_BOX(botBox), message, TRUE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(botBox), sendBtn, FALSE, FALSE, 0);
 
-	gtk_grid_attach(GTK_GRID(grid), botBox, 0, 1, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), botBox, 0, 2, 2, 1);
 	gtk_widget_set_vexpand (grid, TRUE);
 	gtk_widget_set_hexpand (grid, TRUE);
 	gtk_widget_set_halign (grid, GTK_ALIGN_FILL);
@@ -318,7 +328,6 @@ int main (int argc, char *argv[]) {
 	textFields[1] = chat;
 	
 	g_signal_connect(imgBtn, "clicked", G_CALLBACK (on_open_image), NULL);
-	g_signal_connect(sharedBtn, "clicked", G_CALLBACK (on_open_shared), NULL);
 	g_signal_connect(sendBtn, "clicked", G_CALLBACK (on_send_text), textFields);
 	g_signal_connect(connectBtn, "clicked", G_CALLBACK (on_connect), name);
 
@@ -331,7 +340,7 @@ int main (int argc, char *argv[]) {
 	g_message("GUI started");
 
 	on_connect(GTK_BUTTON(connectBtn), name);
-	
+
 	while (gtk_main_iteration_do(FALSE)) {
 		if (!runtime)
 			break;
@@ -344,6 +353,8 @@ int main (int argc, char *argv[]) {
 		//we will need to make it into threads
 
 	}
+
+	delete_browser(browser->files);
 
 	return EXIT_SUCCESS;
 }

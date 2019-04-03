@@ -1,4 +1,5 @@
 #include <gtk/gtk.h>
+#include <time.h>
 #include "img_edit_gui.h"
 #include "ImageEditing/image_edit.h"
 
@@ -8,6 +9,7 @@ typedef struct colors {
 
 colors cols;
 images_structure *images;
+file_t files;
 
 
 void remove_children(GtkWidget *widget) {
@@ -29,17 +31,33 @@ void on_delete(GtkWidget *window) {
 	gtk_widget_destroy(window);
 }
 
-void on_send(GtkButton *sendBtn, const char *shared_folder) {
-	const char* filename = "image_test.jpg";
+void on_send(GtkButton *sendBtn, file_browser_t *browser) {
 
-	char* full_path = malloc(strlen(shared_folder)+strlen(filename));
-	strcpy(full_path, shared_folder); 
+	time_t timestamp = time(NULL);
+	gchar* filename = malloc(20*sizeof(gchar));
+	sprintf(filename, "%ld.jpg", timestamp);
+
+	gchar* full_path = malloc(strlen(SHARED_FOLDER_PATH)+strlen(filename));
+	strcpy(full_path, SHARED_FOLDER_PATH);
 	strcat(full_path, filename);
+	free(filename);
 
+	delete_browser(browser->files);
 	if (gdk_pixbuf_save (images->current, full_path, "jpeg", NULL, NULL))
 		g_message("Image saved.");
 	else 
 		g_warning("Image could not be saved.");
+
+
+	GList *children;
+	children = gtk_container_get_children(GTK_CONTAINER(browser->wrapper));
+	gtk_widget_destroy(GTK_WIDGET(children->data));
+	g_list_free(children);
+
+	GtkWidget *w = shared_browser(browser);
+	gtk_container_add(GTK_CONTAINER(browser->wrapper), w);
+	gtk_widget_show_all(browser->wrapper);
+
 	GtkWidget *toplevel = gtk_widget_get_toplevel (GTK_WIDGET (sendBtn));
 	gtk_widget_destroy(toplevel);
 }
@@ -152,7 +170,7 @@ void on_shade(GtkButton *button __attribute__((unused)), GtkWidget *settingsView
 	image_show(images);
 }
 
-void img_edit_window(gchar *path, const char *shared_folder) {
+void img_edit_window(gchar *path, file_browser_t *browser) {
 	GtkWidget *window;
 	GtkWidget *header;
 	GtkWidget *grid;
@@ -177,6 +195,8 @@ void img_edit_window(gchar *path, const char *shared_folder) {
 	GtkWidget *applyBtn;	
 
 	GError *err = NULL;
+
+	files = files;
 
 	images = (images_structure *) malloc(sizeof(images_structure));
 
@@ -281,7 +301,7 @@ void img_edit_window(gchar *path, const char *shared_folder) {
 
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(on_delete), G_OBJECT(window));
 	g_signal_connect(closeBtn, "clicked", G_CALLBACK(on_close), NULL);
-	g_signal_connect(sendBtn, "clicked", G_CALLBACK(on_send), shared_folder);
+	g_signal_connect(sendBtn, "clicked", G_CALLBACK(on_send), browser);
 
 	g_signal_connect(applyBtn, "clicked", G_CALLBACK(on_apply), NULL);
 	g_signal_connect(removeBtn, "clicked", G_CALLBACK(on_remove), NULL);
