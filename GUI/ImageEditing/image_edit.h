@@ -12,4 +12,8 @@ void tint(images_structure *images, gdouble r, gdouble g, gdouble b);
 
 void shade(images_structure *images, gdouble shadeVal);
 
+void blur(images_structure *images, gboolean gaussian);
+
+void sharpen(images_structure *images);
+
 void image_show(images_structure *images);

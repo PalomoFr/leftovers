@@ -170,6 +170,18 @@ void on_shade(GtkButton *button __attribute__((unused)), GtkWidget *settingsView
 	image_show(images);
 }
 
+void on_blur(GtkButton *button __attribute__((unused)), GtkWidget *settingsView) {
+	remove_children(settingsView);
+	blur(images, TRUE);
+	image_show(images);
+}
+
+void on_sharpen(GtkButton *button __attribute__((unused)), GtkWidget *settingsView) {
+	remove_children(settingsView);
+	sharpen(images);
+	image_show(images);
+}
+
 void img_edit_window(gchar *path, file_browser_t *browser) {
 	GtkWidget *window;
 	GtkWidget *header;
@@ -188,6 +200,8 @@ void img_edit_window(gchar *path, file_browser_t *browser) {
 	GtkWidget *gray;
 	GtkWidget *tint;
 	GtkWidget *shade;
+	GtkWidget *blur;
+	GtkWidget *sharpen;
 
 	GtkWidget *closeBtn;
 	GtkWidget *sendBtn;
@@ -254,12 +268,18 @@ void img_edit_window(gchar *path, file_browser_t *browser) {
 	gray = gtk_button_new_with_label("Grayscale");
 	tint = gtk_button_new_with_label("Color scheme");
 	shade = gtk_button_new_with_label("Shade");
+	blur = gtk_button_new_with_label("Blur");
+	sharpen = gtk_button_new_with_label("Sharpen");
 	gtk_box_pack_start(GTK_BOX(filters), gray, FALSE, FALSE, 0);
 	gtk_widget_set_valign (gray, GTK_ALIGN_START);
 	gtk_box_pack_start(GTK_BOX(filters), tint, FALSE, FALSE, 0);
 	gtk_widget_set_valign (tint, GTK_ALIGN_START);
 	gtk_box_pack_start(GTK_BOX(filters), shade, FALSE, FALSE, 0);
 	gtk_widget_set_valign (shade, GTK_ALIGN_START);
+	gtk_box_pack_start(GTK_BOX(filters), blur, FALSE, FALSE, 0);
+	gtk_widget_set_valign (blur, GTK_ALIGN_START);
+	gtk_box_pack_start(GTK_BOX(filters), sharpen, FALSE, FALSE, 0);
+	gtk_widget_set_valign (sharpen, GTK_ALIGN_START);
 	gtk_widget_set_valign (filters, GTK_ALIGN_START);
 
 	gtk_container_add(GTK_CONTAINER(filtersView),filters);
@@ -309,6 +329,8 @@ void img_edit_window(gchar *path, file_browser_t *browser) {
 	g_signal_connect(gray, "clicked", G_CALLBACK(on_gray), settingsView);
 	g_signal_connect(tint, "clicked", G_CALLBACK(on_tint), settingsView);
 	g_signal_connect(shade, "clicked", G_CALLBACK(on_shade), settingsView);
+	g_signal_connect(blur, "clicked", G_CALLBACK(on_blur), settingsView);
+	g_signal_connect(sharpen, "clicked", G_CALLBACK(on_sharpen), settingsView);
 	
 	gtk_widget_show_all(window);
 
